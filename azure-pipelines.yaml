@@ -1,6 +1,6 @@
 
 trigger:
-  - develop
+  - main
 
 pool:
   name: myAgentPool
@@ -27,6 +27,8 @@ stages:
         script: |
           sudo apt-get install unzip -y
           sudo apt-get install zip -y
+          sudo apt update -y || true
+          sudo apt install default-jdk -y
           ls /home/ladadmin/_work/ || true
     - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
       displayName: Install Terraform
@@ -111,57 +113,7 @@ stages:
               appName: 'WAS-EQR'
               package: '$(Pipeline.Workspace)/drop-fakerestapi/$(Build.BuildId)-fakerestapi.zip'
               deploymentMethod: 'auto'
-  - deployment: VMDeploy
-    displayName: VM Deploy
-    environment:
-      name:  'VM-TEST'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: Bash@3
-            displayName: 'Install Dependencies'
-            inputs:
-              targetType: 'inline'
-              script: |
-                #! /bin/bash
-                
-                sudo apt-get upgrade -y
-                sudo apt-get install python3-pip -y
-                sudo apt-get install unzip -y
-                sudo apt-get install -y chromium-browser
-                pip3 install selenium
-                
-                # download chrome driver
-                FILE=chromedriver_linux64.zip
-                if [ -f "$FILE" ]; then
-                  echo "$FILE exists."
-                else
-                  wget https://chromedriver.storage.googleapis.com/2.41/chromedriver_linux64.zip
-                fi
-                # install chrome driver
-                unzip chromedriver_linux64.zip
-                sudo mv chromedriver /usr/bin/chromedriver
-                sudo chown root:root /usr/bin/chromedriver
-                sudo chmod +x /usr/bin/chromedriver
-                chromium-browser -version
-                chromedriver --version
-                # agent log analytics
-                wget https://raw.githubusercontent.com/Microsoft/OMS-Agent-for-Linux/master/installer/scripts/onboard_agent.sh && sh onboard_agent.sh -w dbf2bd83-6d47-436b-a499-a2b566def8fe -s MuSR8Ti5MMi0E+9+1NM4NxCxFqJcfLzuGD0EtGhjXo3Vhy/THcSdCf1WyQnkXafD+6DiFjiOAEfJiQh6EbZVeg== -d opinsights.azure.com
-
-          - download: current
-            displayName: 'Download Selenium'
-            artifact: selenium
-          - task: Bash@3
-            displayName: UI Tests
-            inputs:
-              targetType: 'inline'
-              script: |
-                unzip -o $(Pipeline.Workspace)/selenium/selenium-tests.zip -d .
-                sudo mkdir /var/logs
-                python3 uitests.py > ui-logs.log
-                sudo mv ui-logs.log /var/logs
-
+              
 - stage: UITests
   displayName: UI Tests
   jobs:
@@ -182,7 +134,12 @@ stages:
               targetType: 'inline'
               script: |
                 unzip -o $(Pipeline.Workspace)/selenium/selenium-tests.zip -d .
+                rm -rf /var/logs || true
                 sudo mkdir /var/logs
+                python3 --version
+                pip install selenium
+                # pip3 uninstall selenium -y || true
+                # pip3 install -r requirements.txt
                 python3 uitests.py > ui-logs.log
                 cat ui-logs.log
                 sudo mv ui-logs.log /var/logs
@@ -200,7 +157,7 @@ stages:
     - task: CmdLine@2
       displayName: Install Newman
       inputs:
-        script: 'npm install newman'
+        script: 'npm install -g newman@5.2.3'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
     - task: CmdLine@2
       displayName: Run Regression Tests
