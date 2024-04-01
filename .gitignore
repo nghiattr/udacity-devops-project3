@@ -1,8 +1,13 @@
-**/*.tfstate
-**/*.json
-**/*.exe
+.DS_Store
+
+
+############ TERRAFORM IGNORE 
+
+terraform/**/*.tfstate
+terraform/**/*.json
+terraform/**/*.exe
 # Local .terraform directories
-**/.terraform/*
+terraform/**/.terraform/*
 
 # .tfstate files
 *.tfstate
@@ -23,3 +28,8 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+# jmeter
+jmeter.log
+
+notes
