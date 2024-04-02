@@ -68,6 +68,6 @@ Udacity final project Ensuring Quality Releases.
     ![capture-webapp-part2](screenshots/13.png)
 
 
-- Azure Log Analytics
+- Azure Log Analytics (SeleniumLog)
   - screenshots of log analytics queries and result sets which will show specific output of the Azure resource
-    ![capture-log-analytics](screenshots/15.png)
+    ![capture-log-analytics](screenshots/16.png)
